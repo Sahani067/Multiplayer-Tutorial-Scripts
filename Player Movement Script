@@ -1,0 +1,61 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+using Photon.Pun; // if this line give you error then first import pun 2 from assets store its free
+
+public class PlayerMovement : MonoBehaviour
+{
+    [SerializeField] float _PlayerSpeed, _SenstivityX, _SenstivityY;
+    float _rotationX, _rotationY, _horizontal, _vertical;
+
+    [SerializeField] GameObject FpsCam;
+
+    CharacterController _controller;
+    Animator _animator;
+    PhotonView photoV;
+
+    private void Start()
+    {
+        photoV = GetComponent<PhotonView>();
+        _controller = GetComponent<CharacterController>();
+        _animator = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        if (photoV.IsMine)
+        {
+            PlayerInput();
+            Movement();
+        }
+        if (!photoV.IsMine)
+        {
+            FpsCam.SetActive(false);
+        }
+    }
+
+    private void PlayerInput()
+    {
+        _horizontal = Input.GetAxis("Horizontal");
+        _vertical = Input.GetAxis("Vertical");
+
+        _animator.SetFloat("SpeedX", _horizontal);
+        _animator.SetFloat("SpeedZ", _vertical);
+
+        _rotationX -= Input.GetAxis("Mouse Y") * _SenstivityX;
+        _rotationY += Input.GetAxis("Mouse X") * _SenstivityY;
+
+    }
+
+    private void Movement()
+    {
+        Vector3 MoveDirection = transform.forward * _PlayerSpeed * _vertical + transform.right * _PlayerSpeed * _horizontal;
+        _controller.Move(MoveDirection * Time.deltaTime);
+
+        _rotationX = Mathf.Clamp(_rotationX, -60, 60);
+
+        transform.rotation = Quaternion.Euler(0f, _rotationY, 0f);
+        FpsCam.transform.rotation = Quaternion.Euler(_rotationX, _rotationY, 0f);
+    }
+}
